@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import "../../Css/Login/Login.css";
-import "../../Css/Login/Particulas.css";
-import "../../Css/Login/TelasLogin.css";
+import "../Css/Login/Login.css";
+import "../Css/Login/Particulas.css";
+import "../Css/Login/TelasLogin.css";
 import Stikers from "../Animations/Pets/Stickers";
 
 /* 
