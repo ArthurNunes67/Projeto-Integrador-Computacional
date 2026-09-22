@@ -12,9 +12,9 @@ import "./Css/Head.css";
 import "./Css/Body.css";
 import "./Css/Profile.css";
 import "./Css/Configs.css";
-import "../../Css/Login/Login.css";
-import "../../Css/Login/Particulas.css";
-import "../../Css/Login/TelasLogin.css";
+import "./Css/Login/Login.css";
+import "./Css/Login/Particulas.css";
+import "./Css/Login/TelasLogin.css";
 import "./Css/Pets/Glutao.css";
 
 const CHAVE_TEMA = "marketfaesa-theme";
