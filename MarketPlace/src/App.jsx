@@ -1,0 +1,258 @@
+import { useEffect, useState } from "react";
+
+import Header from "./Components/Header/Head.jsx";
+import Body from "./Components/Body/Body.jsx";
+import Configs from "./Components/Header/Configs.jsx";
+import Perfil from "./Components/Header/Profile.jsx";
+
+import Login from "./Login/Login.jsx";
+
+import "./Css/index.css";
+import "./Css/Head.css";
+import "./Css/Body.css";
+import "./Css/Profile.css";
+import "./Css/Configs.css";
+import "../../Css/Login/Login.css";
+import "../../Css/Login/Particulas.css";
+import "../../Css/Login/TelasLogin.css";
+import "./Css/Pets/Glutao.css";
+
+const CHAVE_TEMA = "marketfaesa-theme";
+const CHAVE_CONFIG = "marketfaesa-config";
+const CHAVE_LOGIN_CONFIG = "marketfaesa-login-config";
+const CHAVE_AUTENTICACAO = "marketfaesa-auth";
+
+function obterTemaInicial() {
+  const temaSalvo = localStorage.getItem(CHAVE_TEMA);
+
+  return temaSalvo === "dark" ? "dark" : "light";
+}
+
+const CONFIG_PADRAO = {
+  perfilPublico: true,
+  mostrarEmail: false,
+  permitirMensagens: true,
+  novasOportunidades: true,
+  mensagens: true,
+  conexoes: true,
+  publicacoes: true,
+  resumoSemanal: false,
+  reduzirAnimacoes: false,
+};
+
+const LOGIN_CONFIG_PADRAO = {
+  pet: "glutao",
+  estilo: "padrao",
+  particulas: true,
+  animacoes: true,
+};
+
+function obterConfiguracoesIniciais() {
+  try {
+    const salvo = localStorage.getItem(CHAVE_CONFIG);
+
+    if (salvo) {
+      return {
+        ...CONFIG_PADRAO,
+        ...JSON.parse(salvo),
+      };
+    }
+  } catch {
+    // Usa as configurações padrão.
+  }
+
+  return CONFIG_PADRAO;
+}
+
+function obterConfiguracoesLoginIniciais() {
+  try {
+    const salvo = localStorage.getItem(CHAVE_LOGIN_CONFIG);
+
+    if (salvo) {
+      return {
+        ...LOGIN_CONFIG_PADRAO,
+        ...JSON.parse(salvo),
+      };
+    }
+  } catch {
+    // Usa as configurações padrão.
+  }
+
+  return LOGIN_CONFIG_PADRAO;
+}
+
+function obterUsuarioInicial() {
+  try {
+    const salvo = localStorage.getItem(CHAVE_AUTENTICACAO);
+
+    if (salvo) {
+      return JSON.parse(salvo);
+    }
+  } catch {
+    // Sessão inválida: começa deslogado.
+  }
+
+  return null;
+}
+
+function App() {
+  const [usuario, setUsuario] = useState(obterUsuarioInicial);
+
+  const [pagina, setPagina] = useState("inicio");
+
+  const [tema, setTema] = useState(obterTemaInicial);
+
+  const [configuracoes, setConfiguracoes] = useState(
+    obterConfiguracoesIniciais,
+  );
+
+  const [configuracoesLogin, setConfiguracoesLogin] = useState(
+    obterConfiguracoesLoginIniciais,
+  );
+
+  function fazerLogin(dadosLogin) {
+    const usuarioInformado =
+      typeof dadosLogin === "string"
+        ? dadosLogin
+        : dadosLogin?.usuario || dadosLogin?.email || "";
+
+    const senhaInformada =
+      typeof dadosLogin === "object"
+        ? dadosLogin?.senha || dadosLogin?.password || ""
+        : "";
+
+    if (usuarioInformado === "admin" && senhaInformada === "admin") {
+      const usuarioLogado = {
+        usuario: "admin",
+        nome: "Administrador",
+      };
+
+      setUsuario(usuarioLogado);
+
+      localStorage.setItem(CHAVE_AUTENTICACAO, JSON.stringify(usuarioLogado));
+
+      setPagina("inicio");
+
+      return {
+        sucesso: true,
+      };
+    }
+
+    return {
+      sucesso: false,
+      mensagem: "Usuário ou senha inválidos.",
+    };
+  }
+
+  function fazerLogout() {
+    setUsuario(null);
+
+    localStorage.removeItem(CHAVE_AUTENTICACAO);
+
+    setPagina("inicio");
+  }
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", tema);
+
+    localStorage.setItem(CHAVE_TEMA, tema);
+  }, [tema]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-reduzir-animacoes",
+      configuracoes.reduzirAnimacoes ? "true" : "false",
+    );
+
+    localStorage.setItem(CHAVE_CONFIG, JSON.stringify(configuracoes));
+  }, [configuracoes]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      CHAVE_LOGIN_CONFIG,
+      JSON.stringify(configuracoesLogin),
+    );
+  }, [configuracoesLogin]);
+
+  function alterarTema(novoTema) {
+    setTema(novoTema === "dark" ? "dark" : "light");
+  }
+
+  function alterarConfiguracao(campo) {
+    setConfiguracoes((estado) => ({
+      ...estado,
+      [campo]: !estado[campo],
+    }));
+  }
+
+  function alterarConfiguracaoLogin(campo, valor) {
+    setConfiguracoesLogin((estado) => ({
+      ...estado,
+      [campo]: valor,
+    }));
+  }
+
+  function navegarPara(novaPagina) {
+    setPagina(novaPagina);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function renderizarPagina() {
+    switch (pagina) {
+      case "perfil":
+        return (
+          <Perfil
+            onNavigate={navegarPara}
+            perfilPublico={configuracoes.perfilPublico}
+            mostrarEmail={configuracoes.mostrarEmail}
+            usuario={usuario}
+            onLogout={fazerLogout}
+          />
+        );
+
+      case "configuracoes":
+        return (
+          <Configs
+            onNavigate={navegarPara}
+            tema={tema}
+            onChangeTema={alterarTema}
+            configuracoes={configuracoes}
+            onAlterarConfiguracao={alterarConfiguracao}
+            configuracoesLogin={configuracoesLogin}
+            onAlterarConfiguracaoLogin={alterarConfiguracaoLogin}
+          />
+        );
+
+      case "inicio":
+      default:
+        return <Body />;
+    }
+  }
+
+  if (!usuario) {
+    return (
+      <div className="app">
+        <Login onLogin={fazerLogin} configuracoesLogin={configuracoesLogin} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Header
+        paginaAtual={pagina}
+        onNavigate={navegarPara}
+        usuario={usuario}
+        onLogout={fazerLogout}
+      />
+
+      {renderizarPagina()}
+    </div>
+  );
+}
+
+export default App;
